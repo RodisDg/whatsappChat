@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat fake</title>
+</head>
+<style>
+
+/* CONFIGURAÇÃO GERAL */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background-color: #efeae2;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ÁREA DAS MENSAGENS */
+#mensagens {
+    flex: 1;
+    width: 100%;
+    list-style: none;
+    padding: 30px 8%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    overflow-y: auto;
+
+    /* Fundo característico do WhatsApp */
+    background-color: #efeae2;
+    background-image:
+        radial-gradient(circle at 20% 30%, #e8e1d7 1px, transparent 2px),
+        radial-gradient(circle at 70% 60%, #e8e1d7 1px, transparent 2px);
+    background-size: 35px 35px;
+}
+
+/* BALÕES DAS MENSAGENS */
+#mensagens li {
+    background-color: #d9fdd3;
+    color: #111b21;
+
+    padding: 9px 12px;
+    border-radius: 10px 0px 10px 10px;
+
+    max-width: 65%;
+    min-width: 80px;
+
+    font-size: 14.5px;
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+
+    align-self: flex-end;
+    animation: aparecer 0.2s ease;
+}
+
+/* ANIMAÇÃO */
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* BARRA INFERIOR */
+form {
+    width: 100%;
+    min-height: 75px;
+    padding: 12px 5%;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    background-color: #f0f2f5;
+    border-top: 1px solid #d9dfe3;
+}
+
+/* CAMPOS DE TEXTO */
+form input {
+    border: none;
+    outline: none;
+
+    background-color: #ffffff;
+    color: #111b21;
+
+    height: 45px;
+    padding: 0 16px;
+
+    border-radius: 9px;
+    font-size: 15px;
+
+    transition: 0.2s;
+}
+
+form input:focus {
+    box-shadow: 0 0 0 2px rgba(0, 168, 132, 0.15);
+}
+
+/* CAMPO NOME */
+#nome {
+    width: 180px;
+}
+
+/* CAMPO MENSAGEM */
+#mensagem {
+    flex: 1;
+    min-width: 0;
+}
+
+/* BOTÃO ENVIAR */
+form button {
+    border: none;
+    outline: none;
+
+    background-color: #00a884;
+    color: white;
+
+    height: 45px;
+    padding: 0 25px;
+
+    border-radius: 9px;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+form button:hover {
+    background-color: #008f72;
+}
+
+form button:active {
+    transform: scale(0.96);
+}
+
+/* BARRA DE ROLAGEM */
+#mensagens::-webkit-scrollbar {
+    width: 6px;
+}
+
+#mensagens::-webkit-scrollbar-thumb {
+    background-color: #c5c5c5;
+    border-radius: 10px;
+}
+
+/* RESPONSIVIDADE - CELULAR */
+@media (max-width: 600px) {
+
+    #mensagens {
+        padding: 20px 12px;
+        gap: 7px;
+    }
+
+    #mensagens li {
+        max-width: 85%;
+        font-size: 14px;
+        padding: 9px 11px;
+    }
+
+    form {
+        padding: 10px;
+        gap: 6px;
+        min-height: 65px;
+    }
+
+    form input {
+        height: 42px;
+        padding: 0 10px;
+        font-size: 13px;
+    }
+
+    #nome {
+        width: 95px;
+    }
+
+    #mensagem {
+        flex: 1;
+        width: 0;
+    }
+
+    form button {
+        height: 42px;
+        padding: 0 13px;
+        font-size: 13px;
+    }
+}
+
+/* CELULARES MUITO PEQUENOS */
+@media (max-width: 360px) {
+
+    #nome {
+        width: 78px;
+    }
+
+    form {
+        gap: 4px;
+        padding: 7px;
+    }
+
+    form input {
+        font-size: 12px;
+        padding: 0 7px;
+    }
+
+    form button {
+        padding: 0 9px;
+    }
+}
+</style>
+<body>
+
+    <script>
+        // Se a pessoa ainda não informou o nome, abre a tela de entrada.
+        if (!sessionStorage.getItem('nomeChat')) {
+            window.location.replace('/login');
+        }
+    </script>
+
+    <ul id="mensagens"></ul>
+    <form>
+        <input type="text" id="nome" placeholder="Digite seu nome" autocomplete="off">
+        <input type="text" id="mensagem" placeholder="Digite sua mensagem" autocomplete="off">
+        <button>Enviar</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Cria uma instância do Socket.IO
+      const socket = io();
+      // Seleciona o input do nome do usuário
+      const nomeInput = document.getElementById('nome');
+
+      // Usa o nome informado na tela de entrada, sem alterar o restante do chat.
+      const nomeSalvo = sessionStorage.getItem('nomeChat');
+      if (nomeSalvo) {
+        nomeInput.value = nomeSalvo;
+        nomeInput.disabled = true;
+      }
+      // Seleciona o input da mensagem
+      const mensagemInput = document.getElementById('mensagem');
+      // Seleciona a lista de mensagens
+      const mensagens = document.getElementById('mensagens');
+
+      // Adiciona um evento de escuta para o envio do formulário
+      document.querySelector('form').addEventListener('submit', event => {
+        // Previne o envio padrão do formulário
+        event.preventDefault();
+        // Obtém o valor do input do nome do usuário
+        const nome = nomeInput.value;
+        // Obtém o valor do input da mensagem
+        const mensagem = mensagemInput.value;
+        // Verifica se ambos os campos foram preenchidos antes de enviar a mensagem
+        // Verifica se os valores são válidos (não estão em branco)
+        //trim() é um método da linguagem JavaScript que remove os espaços em branco do início e do final de uma string.
+        // emit envia um evento chamado "chat message" com um objeto contendo os valores de nome e mensagem para o servidor.
+        nome.trim() && mensagem.trim() && socket.emit('chat message', { nome, mensagem });
+        // Limpa o input da mensagem
+        mensagemInput.value = '';
+        // Desabilita o input do nome do usuário após a primeira mensagem
+        nomeInput.disabled = true; 
+      });
+
+      // Adiciona um evento de escuta para o evento de mensagem recebido do servidor
+      socket.on('chat message', dados => {
+        // Cria um elemento de lista para exibir a mensagem
+        const lista = document.createElement('li');
+        // Define o texto da mensagem
+        lista.textContent = `${dados.nome}: ${dados.mensagem}`;
+        // Adiciona o elemento de lista à lista de mensagens
+        mensagens.appendChild(lista);
+      });
+    </script>
+</body>
+</html>
